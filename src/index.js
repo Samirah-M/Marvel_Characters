@@ -1,84 +1,86 @@
 let input = document.getElementById("input-box");
 let button = document.getElementById("submit-button");
-let listContainer = document.querySelector(".list");
 let showContainer = document.getElementById("show-container");
-let cardsContainer = document.getElementById("cards-container");
-
+let listContainer = document.querySelector(".list");
 let date = new Date();
 console.log(date.getTime());
 const [timestamp, apiKey, hashValue] = [ts, publicKey, hashVal];
 
-// Set input value
 function displayWords(value) {
-    input.value = value;
-    // Remove all existing elements
-    removeElements();
-  }
-// Function to remove all elements
+  input.value = value;
+  removeElements();
+}
+
 function removeElements() {
-     // Set innerHTML of listContainer to empty string
-    listContainer.innerHTML = "";
+  listContainer.innerHTML = "";
+}
+
+input.addEventListener("input", async () => {
+  removeElements();
+  if (input.value.length < 4) {
+    return;
   }
 
-const apiUrl = `https://gateway.marvel.com/v1/public/characters?limit=100&ts=${timestamp}&apikey=${apiKey}&hash=${hashValue}`;
+  const url = `https://gateway.marvel.com/v1/public/characters?ts=${timestamp}&apikey=${apiKey}&hash=${hashValue}&nameStartsWith=${input.value}`;
+  const response = await fetch(url);
+  const jsonData = await response.json();
 
-// Fetch data from API
-fetch(apiUrl)
-  .then(response => response.json())
-  // Render characters
-  .then(characters => console.log(characters.data.results));
-
-  // Function to render characters
-  function renderCharacters(characters) {
-    // Clear cards container
-    cardsContainer.innerHTML = "";
-    // Loop through characters
-    characters.forEach(character => {
-      // Create a div element  
-      const div = document.createElement('div');
-      div.classList = 'card'
-      // Create image element
-      const image = document.createElement('img');
-      image.classList = 'card-img'
-      image.src = `${character.thumbnail.path}.${character.thumbnail.extension}`
-      // Create a name element
-      const name = document.createElement('h3');
-      name.classList = 'character-name'
-      name.innerText = `${character.name}`
-      // Create a description element
-      const description = document.createElement('p');
-      description.classList = 'character-description'
-      description.innerText = `${character.description}`
-      // Append elements to page
-      div.appendChild(image)
-      div.appendChild(name)
-      div.appendChild(description)
-      cardsContainer.appendChild(div)
-    });
-  };
-
-  // Add click eventlistener to button element
-  button.addEventListener('click', () => {
-    // Trim input value
-    const searchTerm = input.value.trim();
-    // If searchTerm is not empty construct API URL
-    if (searchTerm) {
-      const apiUrl = `https://gateway.marvel.com/v1/public/characters?limit=100&nameStartsWith=${searchTerm}&ts=${timestamp}&apikey=${apiKey}&hash=${hashValue}`;
-      // Fetch from API
-      fetch(apiUrl)
-        .then(response => response.json())
-        .then(characters => {
-          // If no results then display message
-          if (characters.data.total === 0) {
-            displayWords('No results found');
-          } else {
-            renderCharacters(characters.data.results);
-          }
-        })
-        // Catch errors
-        .catch(error => console.error(error));
-    } else {
-      // Display message
-      displayWords('Please enter a character name');
-    }
+  jsonData.data.results.forEach((result) => {
+    const name = result.name;
+    const div = createAutocompleteItem(name);
+    listContainer.appendChild(div);
   });
+});
+
+button.addEventListener("click", async () => {
+  if (input.value.trim().length < 1) {
+    alert("Input cannot be blank");
+    return;
+  }
+
+  showContainer.innerHTML = "";
+  const url = `https://gateway.marvel.com/v1/public/characters?ts=${timestamp}&apikey=${apiKey}&hash=${hashValue}&name=${input.value}`;
+  const response = await fetch(url);
+  const jsonData = await response.json();
+
+  jsonData.data.results.forEach((character) => {
+    showContainer.innerHTML = createCharacterCard(character);
+  });
+});
+
+function createAutocompleteItem(name) {
+  const div = document.createElement("div");
+  div.style.cursor = "pointer";
+  div.classList.add("autocomplete");
+  div.setAttribute("onclick", `displayWords('${name}')`);
+
+  const word = createWordElement(name);
+  div.appendChild(word);
+
+  return div;
+}
+
+function createWordElement(name) {
+  const wordLength = input.value.length;
+  const word = document.createElement("p");
+  word.classList.add("item");
+  word.innerHTML = `<b>${name.substr(0, wordLength)}</b>${name.substr(wordLength)}`;
+
+  return word;
+}
+
+function createCharacterCard(character) {
+  return `
+    <div class="card-container">
+      <div class="character-image">
+        <img src="${character.thumbnail.path}.${character.thumbnail.extension}"/>
+      </div>
+      <div class="character-name">${character.name}</div>
+      <div class="character-description">${character.description}</div>
+    </div>
+  `;
+}
+
+window.onload = () => {
+  button.click();
+};
