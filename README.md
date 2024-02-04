@@ -16,6 +16,10 @@
 
 <img width="1536" alt="Screenshot 2024-02-04 at 4 27 33 pm" src="https://github.com/Samirah-M/Marvel_Characters/assets/143946932/7d3a197d-2142-4091-8e5b-7fecb6b8a6ba">
 
+## Live link:
+```
+https://samirah-m.github.io/Marvel_Characters/
+```
 
 ## Author
 
